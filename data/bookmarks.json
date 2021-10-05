@@ -1,0 +1,32 @@
+[
+    {
+        "Id": 1,
+        "Name": "Youtube",
+        "Url": "youtube.com",
+        "Category": "Divertissement"
+    },
+    {
+        "Id": 2,
+        "Name": "Twitch",
+        "Url": "twitch.tv",
+        "Category": "Divertissement"
+    },
+    {
+        "Id": 3,
+        "Name": "Chess.com",
+        "Url": "Chess.com",
+        "Category": "Divertissement"
+    },
+    {
+        "Id": 4,
+        "Name": "YouBug",
+        "Url": "youbug.com",
+        "Category": "Informatique"
+    },
+    {
+        "Id": 5,
+        "Name": "Youplay",
+        "Url": "youplay.com",
+        "Category": "Divertissement"
+    }
+]
