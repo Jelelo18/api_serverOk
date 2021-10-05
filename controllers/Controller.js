@@ -23,13 +23,10 @@ class Controller {
         }
         return null;
     }
-<<<<<<< HEAD
     
     getAll(){
         this.response.notImplemented();
     }
-=======
->>>>>>> d261fc181390e2a34fae86c2dbb2ce47729caf0a
     get(id){
         this.response.notImplemented();
     }  

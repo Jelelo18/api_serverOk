@@ -10,7 +10,7 @@ module.exports =
     class Repository {
         constructor(objectsName) {
             this.objectsList = [];
-            this.objectsFile = require('path').resolve(__dirname, '../data/bookmarks.json');
+            this.objectsFile = require('path').resolve(__dirname, `../data/${objectsName}.json`);
             this.read();
         }
         read() {
@@ -22,6 +22,7 @@ module.exports =
                 this.objectsList = JSON.parse(rawdata);
             } catch (error) {
                 if (error.code === 'ENOENT') {
+                    console.log('arror biggy');
                     // file does not exist, it will be created on demand
                     this.objectsList = [];
                 }
