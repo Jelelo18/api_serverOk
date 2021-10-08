@@ -4,6 +4,30 @@
 // Contacts.initContacts(); 
 //////////////////////////////////////////////////////////////////////////////
 
+const fs = require('fs');
+const path = require('path');
+
+function requestedStaticRessource(url) {
+    let wwwroot = 'client';
+    let defaultRessource = 'index.html';
+    let ressourceName = url === '/' ? defaultRessource : defaultRessource;
+    return path.join(__dirname, wwwroot, ressourceName);
+}
+function sendRequestedFile(filePath, res) {
+    fs.readFile(filePath,
+        (err, content) => {
+            if (err) {
+                console.log(err);
+                res.end();
+            
+        } else {
+        //success
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(content);
+    }
+    });
+}
+
 function ShowRequestInfo(req) {
     // const URL = require('url').URL;
     // let url = new URL(req.url);
@@ -43,13 +67,19 @@ require('http').createServer((req, res) => {
     // Middlewares pipeline
     ///////////////////////////////////////////////////
     //console.log(req.method);
-    ShowRequestInfo(req);
     AccessControlConfig(res);
-    if (!Prefligth(req, res)) {
-        let router = require('./router');
-        if (!router.dispatch_API_EndPoint(req, res)) {
-            // do something else with request
-            notFound(res);
-        }
-    }
+
+    let file = requestedStaticRessource(req.url);
+    sendRequestedFile(file, res);
+    ShowRequestInfo(req);
+    
+    //if (!Prefligth(req, res)) {
+    //    console.log('yikes');
+    //    let router = require('./router');
+    //    if (!router.dispatch_API_EndPoint(req, res)) {
+    //        // do something else with request
+    //        notFound(res);
+    //    }
+    //}
+
 }).listen(PORT, () => console.log(`HTTP Server running on port ${PORT}...`));

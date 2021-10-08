@@ -2,10 +2,10 @@ const Repository = require('../models/Repository');
 const collectionManager = require('../managers/collectionManager');
 
 module.exports =
-    class BookmarksController extends require("./Controller") {
+    class BookmarksController extends require('./Controller') {
         constructor(req, res) {
             super(req, res);
-            this.bookmarksRepository = new Repository('Bookmarks');
+            this.bookmarksRepository = new Repository('bookmarks');
         }
         getAll() {
             this.response.JSON(this.bookmarksRepository.getAll());
