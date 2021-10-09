@@ -1,0 +1,31 @@
+@import url("//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css");
+
+.bookmarksContainer{
+    margin-bottom: 100px;
+}
+.header-container{
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.header-bookmarks-container{
+    display: grid;
+    grid-template-columns: 25% 25% 25% 10% 15%;
+}
+.bookmark-list-scroll-container{
+    height: 80vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    background-color: white;
+}
+.bookmark-list-container{
+    display: grid;
+    grid-template-columns: 25% 25% 25% 10% 15%;
+}
+.bookmark-list-container div{
+    text-align: left;
+    padding: 5px;
+}
+.sortButton{
+    font-size: 10px;
+    background-color: chartreuse;
+}

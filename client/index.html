@@ -1,20 +1,329 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/css/bootstrap.min.css" 
-          rel="stylesheet" 
-          integrity="sha384-uWxY/CJNBR+1zjPWmfnSnVxwRheevXITnMqoEIeG1LJrdI0GlVs/9cVSyPYXdcSF" 
-          crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+        </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./bookmarksStyle.css">
     <link rel="icon" href="favicon.ico">
 
     <title>Gestionnaire de favoris</title>
 </head>
+
 <body>
-    <p>allo</p>
+    <div class="bookmarksContainer">
+        <div class="bookmarksContainerHeader">
+
+        </div>
+        <div class="array-container">
+            <div class="header-container">
+                <div class="header-bookmarks-container">
+                    <div id="nom">
+                        Nom
+                        <button type="button" class="sortButton" id="sort">Sort</button>
+                    </div>
+                    <div id="url">Url</div>
+                    <div id="category">Category</div>
+                    <div>
+                        <button id="showAddBookmarkFormCmd" tooltip="Ajouter un bookmark"
+                            tooltip-position="left">Plus</button>
+                        <span class="glyphicon glyphicon-plus"></span>
+                        </button>
+                    </div>
+                    <div>
+                        <div>
+                            <input type="text" id="searchCmd" tooltip="Chercher un bookmark" placeholder="Recherche par nom"/>
+                            <span class="glyphicon glyphicon-plus"></span>
+                        </div>
+                        <div>
+                            <input type="text" id="categoryCmd" tooltip="Chercher un bookmark" placeholder="Recherche par category"/>
+                            <span class="glyphicon glyphicon-plus"></span>
+                        </div>
+                        <button type="button" class="sortButton" id="search">Rechercher</button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-container">
+                <div class="form-contact-container" id="bookmarkForm">
+                    <input type="hidden" id="Id" />
+                    <div>
+                        <input type="text" id="Name" placeholder="Nom" class="form-control" />
+                    </div>
+                    <div>
+                        <input type="text" id="Url" placeholder="Url" class="form-control" />
+                    </div>
+                    <div>
+                        <input type="text" id="Category" placeholder="Categorie" class="form-control" />
+                    </div>
+                    <div>
+                        <!-- Noter que un seul des boutons suivants sera affiché selon le mode d'ajout ou de modification -->
+                        <!-- bouton de commande d'ajout de contact -->
+                        <button id="addBookmarkCmd" tooltip="Ajouter" tooltip-position="left">
+                            Ajouter
+                            <span class="glyphicon glyphicon glyphicon-ok"></span>
+                        </button>
+                        <!-- bouton de commande de modification de contact -->
+                        <button id="modifyBookmarkCmd" tooltip="Modifier" tooltip-position="left">
+                            Modifier
+                            <span class="glyphicon glyphicon-ok"></span>
+                        </button>
+                    </div>
+                    <div>
+                        <!-- bouton de commande d'annulation d'ajout ou de modification de contact -->
+                        <button id="cancelCmd" tooltip="Annuler" tooltip-position="left">
+                            Cancel
+                            <span class="glyphicon glyphicon-repeat"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bookmark-list-scroll-container">
+                <div class="bookmark-list-container" id="bookmarkList">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        "use strict";
+
+        $(document).ready(initUI);
+
+        let editMode = false;
+        let addMode = false;
+        let sortParam = '';
+        let nameParam = '';
+        let categoryParam = '';
+
+        // objet d'automatisation de la validation
+        let validationProvider;
+
+        // Initialisation de l'interface
+        function initUI() {
+            getBookmarks(updateBookmarkList);
+            eraseForm();
+            $('#addBookmarkCmd').click(addBookmark);
+            $('#showAddBookmarkFormCmd').click(showAddBookmarkForm);
+            $('#modifyBookmarkCmd').click(modifyBookmark);
+            $('#cancelCmd').click(eraseForm);
+            $('#sort').click(sortClick);
+            $('#search').click(search);
+            $('#categorySearch').click(searchCategory);
+        }
+
+        function showAddBookmarkForm() {
+            addMode = true;
+            $('#addBookmarkCmd').show();
+            $('#bookmarkForm').show(400);
+            $('#showAddBookmarkFormCmd').hide();
+        }
+
+        function showEditBookmarkForm(e) {
+            editMode = true;
+            $('#addBookmarkCmd').hide();
+            $('#showAddBookmarkFormCmd').hide();
+            $('#bookmarkForm').show(400);
+
+            let bookmarkId = e.currentTarget.id.split('_')[1];
+
+            // Extraction du contact de Id = contactId via le service web API
+            let bookmark = getBookmark(bookmarkId, setFormData);
+        }
+
+        function sortClick() {
+            if(sortParam=='')
+                sortParam='name';
+            else if(sortParam=='name')
+                sortParam='category';
+            else if(sortParam=='category')
+                sortParam='';
+            sortList();
+        }
+        function search() {
+            nameParam = $('#searchCmd').val();
+            categoryParam = $('#categoryCmd').val();
+            sortList();
+        }
+
+        function sortList() {
+
+            var params = {sort: sortParam, name: nameParam, category: categoryParam};
+            var query = [];
+
+            for(var key in params){
+                console.log(key+'='+params[key]);
+                if(params[key] != '')
+                    query.push(key+'='+params[key])
+            }
+
+            var querystring = query.join('&');
+
+            const options = {
+                method: 'GET',
+            }
+            fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks?'+ querystring, options)
+                .then(response => response.json())
+                .then(bookmarks => updateBookmarkList(bookmarks))
+        }
+
+        function eraseForm() {
+            addMode = false;
+            editMode = false;
+
+            $('#bookmarkForm').hide(400);
+            $('#modifyBookmarkCmd').hide();
+            $('#showAddBookmarkFormCmd').show();
+
+            $('#Name').val('');
+            $('#Url').val('');
+            $('#Category').val('');
+        }
+
+        function getBookmarks() {
+            fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks')
+                .then(response => response.json())
+                .then(bookmarks => updateBookmarkList(bookmarks))
+        }
+        function getBookmark(id, callback) {
+            fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks/' + id)
+                .then(response => response.json())
+                .then(bookmark => callback(bookmark))
+        }
+
+        function setFormData(bookmark) {
+            $('#Id').val(bookmark.Id);
+            $('#Name').val(bookmark.Name);
+            $('#Url').val(bookmark.Url);
+            $('#Category').val(bookmark.Category);
+            $('#modifyBookmarkCmd').show();
+        }
+
+
+        function makeBookmarkFromForm(includeId = false) {
+            if (includeId) {
+                let bookmarkId = parseInt($('#Id').val());
+                return { Id: bookmarkId, Name: $('#Name').val(), Url: $('#Url').val(), Category: $('#Category').val() };
+            }
+            return { Id: 0, Name: $('#Name').val(), Url: $('#Url').val(), Category: $('#Category').val() };
+        }
+
+        function addBookmark() {
+            let bookmark = makeBookmarkFromForm();
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookmark)
+            };
+
+            fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks', options).then(getBookmarks);
+        }
+
+        function modifyBookmark() {
+            let bookmark = makeBookmarkFromForm(true);
+
+            const options = {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookmark)
+            };
+            fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks/' + bookmark.Id, options)
+                .then(getBookmarks);
+        }
+
+        function deleteBookmark(e) {
+            // Extraction du Id du contact inscrit dans l'attribut id de l'élément déclencheur de l'événement click
+            let bookmarkId = parseInt(e.currentTarget.id.split('_')[1]);
+            getBookmark(bookmarkId, confirmDeleteBookmark);
+        }
+
+        function confirmDeleteBookmark(bookmark) {
+            $.confirm({
+                title: 'Attention!',
+                content: 'Effacer ' + bookmark.Name + '?',
+                buttons: {
+                    confirmer: function () {
+
+                        const options = {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                        };
+
+                        console.log(bookmark.Id);
+                        fetch('https://mountainous-phantom-protest.glitch.me/api/bookmarks/' + bookmark.Id, options).then(getBookmarks);
+                    },
+                    annuler: {},
+                }
+            });
+        }
+
+
+        function makeTextCell(content, cssClass) {
+            return $('<div>' + content + '</div>');
+        }
+
+        function makeButton(cssClass, id, tooltip) {
+            return $('<button id="' + id + '" class="' + cssClass + '"tooltip="' + tooltip + '" tooltip-position="left"></button>');
+        }
+
+        function updateBookmarkList(bookmarks) {
+            eraseForm();
+            // effacer le tableau affichant la liste de contacts
+            console.log('emptying..');
+            $('#bookmarkList').empty();
+
+            // pour tous les contacts du tableau contacts
+            bookmarks.forEach(bookmark => { // créer une nouvelle rangée
+
+                // déterminer la couleur de la rangée
+
+                // Distribution des données du contact dans des cellules de la rangée
+                $('#bookmarkList').append(makeTextCell(bookmark.Name));
+                $('#bookmarkList').append(makeTextCell(bookmark.Url));
+                $('#bookmarkList').append(makeTextCell(bookmark.Category));
+
+                // Bouton d'appel à la modification du contact
+                $('#bookmarkList')
+                    .append(makeButton("editBookmarkCmd", "edit_" + bookmark.Id, "Modifier " + bookmark.Name)
+                        .append('edit'));
+
+                // Bouton d'appel au retrait du contact
+                $('#bookmarkList')
+                    .append(makeButton("deleteBookmarkCmd", "delete_" + bookmark.Id, "Effacer " + bookmark.Name)
+                        .append('remove'));
+
+            });
+
+            // Attacher les gestionnaires du clic aux nouveaux boutons
+            $('.editBookmarkCmd').click(showEditBookmarkForm);
+            $('.deleteBookmarkCmd').click(deleteBookmark);
+            //$('input').on("paste", function (e) { e.preventDefault(); });
+        }
+
+    </script>
+
 </body>
+
 </html>
